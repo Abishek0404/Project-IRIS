@@ -196,7 +196,7 @@ export default function CardFanCarousel() {
             const translateZ = -absOffset * zSpread;
             const scale = 1 - absOffset * scaleStep;
             const zIndex = 50 - absOffset * 5;
-            const cardOpacity = Math.max(0.45, 1 - absOffset * 0.14);
+            const cardOpacity = isCenter ? 1 : Math.max(0.35, 1 - absOffset * 0.2);
 
             return (
               <motion.div

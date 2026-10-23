@@ -1,7 +1,7 @@
 import Navbar from './components/Navbar';
 import { Hero } from './components/ui/hero-1';
 import CardFanCarousel from './components/CardFanCarousel';
-import Showreel from './components/Showreel';
+// import Showreel from './components/Showreel'; // Temporarily hidden — no showreel content yet
 import PortfolioGrid from './components/PortfolioGrid';
 import SkillsTools from './components/SkillsTools';
 import AboutMe from './components/AboutMe';
@@ -17,14 +17,14 @@ export default function App() {
           title="I craft visuals that tell stories"
           subtitle="Video editor and motion designer specializing in short-form content, motion graphics, and YouTube productions."
           eyebrow="Available for Projects"
-          ctaLabel="Watch Showreel"
-          ctaHref="#showreel"
+          ctaLabel="View Longform Works"
+          ctaHref="#work"
           secondaryCtaLabel="Explore Reels"
           secondaryCtaHref="#reels-fan"
         />
         <CardFanCarousel />
         <PortfolioGrid />
-        <Showreel />
+        {/* <Showreel /> */}
         <SkillsTools />
         <AboutMe />
         <Contact />

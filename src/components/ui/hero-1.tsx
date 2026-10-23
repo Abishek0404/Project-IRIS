@@ -18,8 +18,8 @@ export function Hero({
   eyebrow = "Available for Projects",
   title,
   subtitle,
-  ctaLabel = "Watch Showreel",
-  ctaHref = "#showreel",
+  ctaLabel = "View Longform Works",
+  ctaHref = "#work",
   secondaryCtaLabel = "Let's Talk",
   secondaryCtaHref = "#contact",
 }: HeroProps) {
