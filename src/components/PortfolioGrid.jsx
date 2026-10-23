@@ -11,8 +11,8 @@ const LONG_FORM_PROJECTS = [
     runtime: '07:48',
     views: 'Studio Quality',
     description: 'A detailed asset tailored for educational and studio-style long-form video editing production.',
-    videoUrl: 'https://drive.google.com/file/d/1yxGwmzyuYdOgpCymL4_lb6_nXfNPAwzr/preview',
-    driveLink: 'https://drive.google.com/file/d/1yxGwmzyuYdOgpCymL4_lb6_nXfNPAwzr/view',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/h0sZh_deEFg?rel=0&modestbranding=1&playsinline=1',
+    watchLink: 'https://youtu.be/h0sZh_deEFg',
     tags: ['Educational', 'Long-Form', 'Studio'],
     featured: true,
   },
@@ -23,21 +23,21 @@ const LONG_FORM_PROJECTS = [
     runtime: '08:45',
     views: 'Narrative',
     description: 'A visual organization framework designed for structuring narrative elements in a documentary format.',
-    videoUrl: 'https://drive.google.com/file/d/1rG_uj7IMVWR45n4B4-aJu6r18JNOhiQH/preview',
-    driveLink: 'https://drive.google.com/file/d/1rG_uj7IMVWR45n4B4-aJu6r18JNOhiQH/view',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/A2-hdQWveUc?rel=0&modestbranding=1&playsinline=1',
+    watchLink: 'https://youtu.be/A2-hdQWveUc',
     tags: ['Documentary', 'Storytelling', 'Production'],
     featured: false,
   },
   {
     id: 3,
     title: 'ON MY EX',
-    category: 'Entertainment / Gaming Content',
+    category: 'Music / Lyric Visual',
     runtime: '03:39',
-    views: 'Gaming',
-    description: 'A video component used to coordinate narrative timing or stylistic effects for gaming clips.',
-    videoUrl: 'https://drive.google.com/file/d/1dlAoo_WHIeSeBWP1vjRpoQv-lmeYfukx/preview',
-    driveLink: 'https://drive.google.com/file/d/1dlAoo_WHIeSeBWP1vjRpoQv-lmeYfukx/view',
-    tags: ['Gaming', 'Entertainment', 'Narrative'],
+    views: 'Lyric Visual',
+    description: 'A hand-drawn lyric visual set to Juice WRLD, blending illustration with rhythm-synced typography and motion.',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/teObhdsRsDg?rel=0&modestbranding=1&playsinline=1',
+    watchLink: 'https://youtu.be/teObhdsRsDg',
+    tags: ['Music', 'Lyric Visual', 'Illustration'],
     featured: false,
   },
   {
@@ -47,8 +47,8 @@ const LONG_FORM_PROJECTS = [
     runtime: '19:54',
     views: 'Informational',
     description: 'A structured ranking list detailing prominent reptile types alongside practical alternative suggestions.',
-    videoUrl: 'https://drive.google.com/file/d/10stMH1trsGWlM4vUmtjb_86ScyzTlJ3_/preview',
-    driveLink: 'https://drive.google.com/file/d/10stMH1trsGWlM4vUmtjb_86ScyzTlJ3_/view',
+    videoUrl: 'https://www.youtube-nocookie.com/embed/Guokxi7D7xM?rel=0&modestbranding=1&playsinline=1',
+    watchLink: 'https://youtu.be/Guokxi7D7xM',
     tags: ['Nature', 'Ranking', 'Informational'],
     featured: false,
   },
@@ -360,7 +360,7 @@ export default function PortfolioGrid() {
 
                     {/* External Link */}
                     <a
-                      href={project.driveLink}
+                      href={project.watchLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="btn-press"
@@ -386,7 +386,7 @@ export default function PortfolioGrid() {
                         e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
                         e.currentTarget.style.color = '#ffffff';
                       } : undefined}
-                      aria-label={`Open ${project.title} on Google Drive`}
+                      aria-label={`Watch ${project.title}`}
                     >
                       Watch <ArrowUpRight size={14} weight="bold" />
                     </a>

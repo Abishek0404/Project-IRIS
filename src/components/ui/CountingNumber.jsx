@@ -5,7 +5,7 @@ import { useRef } from 'react';
 export function CountingNumber({ value, suffix = '' }) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
-  const spring = useSpring(0, { bounce: 0, duration: 2000 });
+  const spring = useSpring(0, { bounce: 0, duration: 800 });
   const display = useTransform(spring, (current) => Math.floor(current) + suffix);
 
   useEffect(() => {
