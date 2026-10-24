@@ -215,6 +215,43 @@ export function Hero({
             </a>
           )}
         </div>
+
+        {/* Testimonials link in Hero */}
+        <div style={{ marginTop: '2rem' }}>
+          <a
+            href="#testimonials"
+            className="btn-press"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              padding: '0.35rem 0.95rem',
+              borderRadius: '9999px',
+              fontSize: '0.8rem',
+              color: '#9ca3af',
+              textDecoration: 'none',
+              fontFamily: 'var(--font-mono)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              background: 'rgba(255, 255, 255, 0.02)',
+              transition: 'all 200ms ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = '#ffffff';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = '#9ca3af';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
+            }}
+          >
+            <span style={{ color: '#22c55e', fontSize: '0.75rem' }}>★</span>
+            <span>Client Reviews</span>
+            <span style={{ color: 'rgba(255, 255, 255, 0.3)' }}>•</span>
+            <span style={{ color: '#e5e7eb' }}>Read Testimonials ↓</span>
+          </a>
+        </div>
       </div>
     </section>
   )

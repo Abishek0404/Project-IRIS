@@ -83,6 +83,49 @@ const REELS = [
   },
 ];
 
+const GDRIVE_PORTFOLIO_URL =
+  import.meta.env.VITE_GDRIVE_URL ||
+  'https://drive.google.com/drive/folders/1486nKomZ5tX3OFVFuctzvVb8KP0ugs6D?usp=drive_link';
+
+function GoogleDriveIcon({ size = 20, className = '' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 87.3 78"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      style={{ flexShrink: 0 }}
+      aria-hidden="true"
+    >
+      <path
+        d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z"
+        fill="#0066da"
+      />
+      <path
+        d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0 -1.2 4.5h27.5z"
+        fill="#00ac47"
+      />
+      <path
+        d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.502l5.852 11.5z"
+        fill="#ea4335"
+      />
+      <path
+        d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z"
+        fill="#00832d"
+      />
+      <path
+        d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z"
+        fill="#2684fc"
+      />
+      <path
+        d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z"
+        fill="#ffba00"
+      />
+    </svg>
+  );
+}
+
 export default function CardFanCarousel() {
   const [activeIndex, setActiveIndex] = useState(3);
   const [activeModalVideo, setActiveModalVideo] = useState(null);
@@ -160,9 +203,50 @@ export default function CardFanCarousel() {
             >
               Short-Form & Reels
             </h2>
-            <p style={{ color: '#9ca3af', maxWidth: '540px', margin: '0 auto', fontSize: '1.05rem' }}>
+            <p style={{ color: '#9ca3af', maxWidth: '540px', margin: '0 auto', fontSize: '1.05rem', marginBottom: '1.25rem' }}>
               {isMobile ? 'Swipe to browse, tap to watch.' : 'Click any card to bring it to the center, then click to watch.'}
             </p>
+
+            {/* Google Drive Portfolio Button */}
+            <div style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+              <a
+                href={GDRIVE_PORTFOLIO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-press"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.6rem',
+                  padding: '0.55rem 1.25rem',
+                  borderRadius: '9999px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  color: '#ffffff',
+                  fontSize: '0.875rem',
+                  fontWeight: 500,
+                  textDecoration: 'none',
+                  backdropFilter: 'blur(12px)',
+                  boxShadow: '0 4px 18px rgba(0, 0, 0, 0.35)',
+                  transition: 'all 200ms cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+                onMouseEnter={canHover ? (e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                } : undefined}
+                onMouseLeave={canHover ? (e) => {
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.transform = 'translateY(0)';
+                } : undefined}
+                aria-label="View portfolio on Google Drive"
+              >
+                <GoogleDriveIcon size={19} />
+                <span>View Drive Portfolio</span>
+                <ArrowUpRight size={14} style={{ opacity: 0.65, marginLeft: '2px' }} weight="bold" />
+              </a>
+            </div>
           </motion.div>
         </div>
 

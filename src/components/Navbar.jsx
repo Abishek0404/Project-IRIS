@@ -4,6 +4,7 @@ import { List, X } from '@phosphor-icons/react';
 const NAV_LINKS = [
   { label: 'Reels', href: '#reels-fan' },
   { label: 'Selected Work', href: '#work' },
+  { label: 'Testimonials', href: '#testimonials' },
   { label: 'About', href: '#about' },
 ];
 

@@ -3,6 +3,7 @@ import { Hero } from './components/ui/hero-1';
 import CardFanCarousel from './components/CardFanCarousel';
 // import Showreel from './components/Showreel'; // Temporarily hidden — no showreel content yet
 import PortfolioGrid from './components/PortfolioGrid';
+import Testimonials from './components/Testimonials';
 import SkillsTools from './components/SkillsTools';
 import AboutMe from './components/AboutMe';
 import Contact from './components/Contact';
@@ -24,6 +25,7 @@ export default function App() {
         />
         <CardFanCarousel />
         <PortfolioGrid />
+        <Testimonials />
         {/* <Showreel /> */}
         <SkillsTools />
         <AboutMe />
