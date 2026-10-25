@@ -189,6 +189,7 @@ export default function PortfolioGrid() {
                       allow="autoplay; encrypted-media"
                       allowFullScreen
                       loading="lazy"
+                      referrerPolicy="strict-origin-when-cross-origin"
                     />
                   ) : (
                     <button

@@ -68,6 +68,7 @@ export default function Showreel() {
               allow="autoplay; encrypted-media"
               allowFullScreen
               loading="lazy"
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           </div>
         </motion.div>

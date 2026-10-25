@@ -649,6 +649,7 @@ export default function CardFanCarousel() {
                 }}
                 allow="autoplay; encrypted-media"
                 allowFullScreen
+                referrerPolicy="strict-origin-when-cross-origin"
               />
 
               {/* Modal Bottom Bar */}

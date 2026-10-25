@@ -32,6 +32,7 @@ export default function Contact() {
     name: '',
     email: '',
     message: '',
+    botcheck: '',
   });
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,6 +53,13 @@ export default function Contact() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Honeypot check: silently simulate success for automated bots without calling API
+    if (formState.botcheck) {
+      setSubmitted(true);
+      return;
+    }
+
     const newErrors = validate();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -61,7 +69,12 @@ export default function Contact() {
     setIsSubmitting(true);
     setServerError(null);
 
-    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '24c42cd6-a51f-4049-9eff-396f1f6e4742';
+    const accessKey = import.meta.env.VITE_WEB3FORMS_ACCESS_KEY;
+    if (!accessKey) {
+      setServerError('Contact form is temporarily unavailable. Please email disc.abishek@gmail.com directly.');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
       const response = await fetch('https://api.web3forms.com/submit', {
@@ -77,6 +90,7 @@ export default function Contact() {
           message: formState.message,
           subject: `New Portfolio Inquiry from ${formState.name}`,
           from_name: 'Iris Portfolio Contact Form',
+          botcheck: false,
         }),
       });
 
@@ -273,6 +287,18 @@ export default function Contact() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }} noValidate>
+                {/* Honeypot field for bot spam prevention — hidden from real users */}
+                <input
+                  type="checkbox"
+                  name="botcheck"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  aria-hidden="true"
+                  style={{ display: 'none' }}
+                  checked={!!formState.botcheck}
+                  onChange={(e) => setFormState((prev) => ({ ...prev, botcheck: e.target.checked }))}
+                />
+
                 {/* Name */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   <label
