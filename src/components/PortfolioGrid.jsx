@@ -11,6 +11,8 @@ const LONG_FORM_PROJECTS = [
     runtime: '07:48',
     views: 'Studio Quality',
     description: 'A detailed asset tailored for educational and studio-style long-form video editing production.',
+    videoId: 'h0sZh_deEFg',
+    thumbnailUrl: 'https://img.youtube.com/vi/h0sZh_deEFg/hqdefault.jpg',
     videoUrl: 'https://www.youtube-nocookie.com/embed/h0sZh_deEFg?rel=0&modestbranding=1&playsinline=1',
     watchLink: 'https://youtu.be/h0sZh_deEFg',
     tags: ['Educational', 'Long-Form', 'Studio'],
@@ -23,6 +25,8 @@ const LONG_FORM_PROJECTS = [
     runtime: '08:45',
     views: 'Narrative',
     description: 'A visual organization framework designed for structuring narrative elements in a documentary format.',
+    videoId: 'A2-hdQWveUc',
+    thumbnailUrl: 'https://img.youtube.com/vi/A2-hdQWveUc/hqdefault.jpg',
     videoUrl: 'https://www.youtube-nocookie.com/embed/A2-hdQWveUc?rel=0&modestbranding=1&playsinline=1',
     watchLink: 'https://youtu.be/A2-hdQWveUc',
     tags: ['Documentary', 'Storytelling', 'Production'],
@@ -35,6 +39,8 @@ const LONG_FORM_PROJECTS = [
     runtime: '03:39',
     views: 'Lyric Visual',
     description: 'A hand-drawn lyric visual set to Juice WRLD, blending illustration with rhythm-synced typography and motion.',
+    videoId: 'teObhdsRsDg',
+    thumbnailUrl: 'https://img.youtube.com/vi/teObhdsRsDg/hqdefault.jpg',
     videoUrl: 'https://www.youtube-nocookie.com/embed/teObhdsRsDg?rel=0&modestbranding=1&playsinline=1',
     watchLink: 'https://youtu.be/teObhdsRsDg',
     tags: ['Music', 'Lyric Visual', 'Illustration'],
@@ -47,6 +53,8 @@ const LONG_FORM_PROJECTS = [
     runtime: '19:54',
     views: 'Informational',
     description: 'A structured ranking list detailing prominent reptile types alongside practical alternative suggestions.',
+    videoId: 'Guokxi7D7xM',
+    thumbnailUrl: 'https://img.youtube.com/vi/Guokxi7D7xM/hqdefault.jpg',
     videoUrl: 'https://www.youtube-nocookie.com/embed/Guokxi7D7xM?rel=0&modestbranding=1&playsinline=1',
     watchLink: 'https://youtu.be/Guokxi7D7xM',
     tags: ['Nature', 'Ranking', 'Informational'],
@@ -203,22 +211,53 @@ export default function PortfolioGrid() {
                         border: 'none',
                         background: '#0a0a0a',
                         cursor: 'pointer',
+                        padding: 0,
+                        overflow: 'hidden',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
                     >
-                      <div style={{
-                        width: '56px',
-                        height: '56px',
-                        borderRadius: '50%',
-                        background: 'rgba(255, 255, 255, 0.12)',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}>
-                        <Play size={24} weight="fill" color="#ffffff" style={{ marginLeft: '2px' }} />
+                      {/* Video Thumbnail Image */}
+                      <img
+                        src={project.thumbnailUrl}
+                        alt={project.title}
+                        loading="lazy"
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          objectPosition: 'center',
+                        }}
+                      />
+
+                      {/* Subtle dark tint overlay */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background: 'rgba(0, 0, 0, 0.4)',
+                        }}
+                      />
+
+                      {/* Center Play Button Icon */}
+                      <div
+                        style={{
+                          position: 'relative',
+                          zIndex: 2,
+                          width: '56px',
+                          height: '56px',
+                          borderRadius: '50%',
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.6)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Play size={24} weight="fill" color="#000000" style={{ marginLeft: '2px' }} />
                       </div>
                     </button>
                   )}

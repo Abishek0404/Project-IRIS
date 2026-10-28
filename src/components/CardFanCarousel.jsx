@@ -135,16 +135,52 @@ export default function CardFanCarousel() {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const canHover = useMediaQuery('(hover: hover) and (pointer: fine)');
 
-  // Touch swipe
-  const touchStartRef = useRef({ x: 0, y: 0 });
+  // Mobile horizontal snap slider ref
+  const mobileScrollRef = useRef(null);
+
+  const handleMobileScroll = () => {
+    if (!mobileScrollRef.current) return;
+    const { scrollLeft } = mobileScrollRef.current;
+    const cardStep = 256; // 240px card + 16px gap
+    const newIndex = Math.round(scrollLeft / cardStep);
+    if (newIndex >= 0 && newIndex < REELS.length && newIndex !== activeIndex) {
+      setActiveIndex(newIndex);
+    }
+  };
+
+  const scrollToMobileIndex = (index) => {
+    if (!mobileScrollRef.current) {
+      setActiveIndex(index);
+      return;
+    }
+    const cardStep = 256;
+    mobileScrollRef.current.scrollTo({
+      left: index * cardStep,
+      behavior: 'smooth',
+    });
+    setActiveIndex(index);
+  };
 
   const handlePrev = () => {
-    setActiveIndex((prev) => (prev > 0 ? prev - 1 : REELS.length - 1));
+    if (isMobile) {
+      const target = activeIndex > 0 ? activeIndex - 1 : REELS.length - 1;
+      scrollToMobileIndex(target);
+    } else {
+      setActiveIndex((prev) => (prev > 0 ? prev - 1 : REELS.length - 1));
+    }
   };
 
   const handleNext = () => {
-    setActiveIndex((prev) => (prev < REELS.length - 1 ? prev + 1 : 0));
+    if (isMobile) {
+      const target = activeIndex < REELS.length - 1 ? activeIndex + 1 : 0;
+      scrollToMobileIndex(target);
+    } else {
+      setActiveIndex((prev) => (prev < REELS.length - 1 ? prev + 1 : 0));
+    }
   };
+
+  // Touch swipe for Desktop (if touch device on large screen)
+  const touchStartRef = useRef({ x: 0, y: 0 });
 
   const onTouchStart = (e) => {
     touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
@@ -159,16 +195,16 @@ export default function CardFanCarousel() {
     }
   };
 
-  // Responsive layout — desktop values unchanged
-  const cardW = isMobile ? 170 : 240;
-  const cardH = isMobile ? 300 : 400;
-  const stageH = isMobile ? 380 : 500;
-  const xSpread = isMobile ? 70 : 125;
-  const yPow = isMobile ? 10 : 14;
-  const zSpread = isMobile ? 25 : 40;
-  const rotStep = isMobile ? 3.5 : 5.5;
-  const scaleStep = isMobile ? 0.06 : 0.04;
-  const perspectiveVal = isMobile ? '900px' : '1400px';
+  // Desktop 3D layout values
+  const cardW = 240;
+  const cardH = 400;
+  const stageH = 500;
+  const xSpread = 125;
+  const yPow = 14;
+  const zSpread = 40;
+  const rotStep = 5.5;
+  const scaleStep = 0.04;
+  const perspectiveVal = '1400px';
 
   return (
     <section
@@ -250,228 +286,401 @@ export default function CardFanCarousel() {
           </motion.div>
         </div>
 
-        {/* 3D Fan Carousel Stage */}
-        <div
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-          style={{
-            position: 'relative',
-            width: '100%',
-            height: `${stageH}px`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            perspective: perspectiveVal,
-            userSelect: 'none',
-            touchAction: 'pan-y',
-          }}
-        >
-          {REELS.map((reel, index) => {
-            const offset = index - activeIndex;
-            const absOffset = Math.abs(offset);
-            const isCenter = offset === 0;
-
-            // Skip far-off cards on mobile for GPU performance
-            if (isMobile && absOffset > 3) return null;
-
-            const rotateZ = offset * rotStep;
-            const translateX = offset * xSpread;
-            const translateY = Math.pow(absOffset, 1.8) * yPow;
-            const translateZ = -absOffset * zSpread;
-            const scale = 1 - absOffset * scaleStep;
-            const zIndex = 50 - absOffset * 5;
-            const cardOpacity = isCenter ? 1 : Math.max(0.35, 1 - absOffset * 0.2);
-
-            return (
-              <motion.div
-                key={reel.id}
-                initial={{ opacity: 0, y: 80, rotateZ: 0 }}
-                animate={
-                  isInView
-                    ? {
-                        opacity: cardOpacity,
-                        x: translateX,
-                        y: translateY,
-                        z: translateZ,
-                        rotateZ,
-                        scale,
-                      }
-                    : {}
-                }
-                transition={{
-                  type: 'spring',
-                  stiffness: 280,
-                  damping: 26,
-                  mass: 0.8,
-                }}
-                whileHover={canHover ? {
-                  scale: scale * 1.04,
-                  y: translateY - 12,
-                  zIndex: 60,
-                  opacity: 1,
-                  transition: { duration: 0.2 },
-                } : undefined}
-                onClick={() => {
-                  if (isCenter) {
-                    setActiveModalVideo(reel);
-                  } else {
-                    setActiveIndex(index);
-                  }
-                }}
-                style={{
-                  position: 'absolute',
-                  width: `${cardW}px`,
-                  height: `${cardH}px`,
-                  borderRadius: '24px',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  zIndex,
-                  transformStyle: 'preserve-3d',
-                  border: isCenter
-                    ? '2px solid rgba(255, 255, 255, 0.45)'
-                    : '1px solid rgba(255, 255, 255, 0.12)',
-                  boxShadow: isCenter
-                    ? '0 25px 50px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 255, 255, 0.12)'
-                    : '0 15px 35px rgba(0, 0, 0, 0.7)',
-                  background: reel.bg,
-                }}
-              >
-                {/* Centered Video Thumbnail */}
-                <img
-                  src={reel.thumbnailUrl}
-                  alt={reel.title}
-                  referrerPolicy="no-referrer"
-                  crossOrigin="anonymous"
-                  loading="eager"
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    objectPosition: 'center',
-                    zIndex: 0,
-                    filter: isCenter ? 'brightness(0.92)' : 'brightness(0.75)',
-                    transition: 'filter 300ms ease, transform 300ms ease',
-                  }}
-                  onError={(e) => {
-                    e.currentTarget.style.opacity = '0';
-                  }}
-                />
-
-                {/* Darken overlay so text is readable */}
+        {/* Reels Stage — Mobile Native Snap Slider VS Desktop 3D Fan */}
+        {isMobile ? (
+          /* Mobile Native Horizontal Snap Slider */
+          <div
+            ref={mobileScrollRef}
+            onScroll={handleMobileScroll}
+            className="no-scrollbar"
+            style={{
+              display: 'flex',
+              gap: '1rem',
+              overflowX: 'auto',
+              scrollSnapType: 'x mandatory',
+              WebkitOverflowScrolling: 'touch',
+              padding: '1rem calc(50vw - 120px) 1.5rem calc(50vw - 120px)',
+              userSelect: 'none',
+              touchAction: 'pan-x',
+            }}
+          >
+            {REELS.map((reel, index) => {
+              const isCenter = index === activeIndex;
+              return (
                 <div
+                  key={reel.id}
+                  onClick={() => setActiveModalVideo(reel)}
                   style={{
-                    position: 'absolute',
-                    inset: 0,
-                    zIndex: 1,
-                    background: `
-                      linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.6) 85%, rgba(0,0,0,0.9) 100%)
-                    `,
-                    pointerEvents: 'none',
-                  }}
-                />
-
-                {/* Card Content Layer */}
-                <div
-                  style={{
+                    flex: '0 0 240px',
+                    height: '380px',
+                    scrollSnapAlign: 'center',
                     position: 'relative',
-                    zIndex: 5,
-                    width: '100%',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    padding: '1.25rem',
-                    boxSizing: 'border-box',
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    background: reel.bg,
+                    border: isCenter
+                      ? '2px solid rgba(255, 255, 255, 0.45)'
+                      : '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: isCenter
+                      ? '0 16px 36px rgba(0, 0, 0, 0.9), 0 0 25px rgba(255, 255, 255, 0.08)'
+                      : '0 8px 24px rgba(0, 0, 0, 0.6)',
+                    willChange: 'transform',
+                    transform: isCenter ? 'scale(1)' : 'scale(0.96)',
+                    opacity: isCenter ? 1 : 0.75,
+                    transition: 'transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease, border-color 250ms ease',
                   }}
                 >
-                  {/* Top Tag & Stats */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span
-                      style={{
-                        fontSize: '0.65rem',
-                        fontFamily: 'var(--font-mono)',
-                        padding: '0.2rem 0.55rem',
-                        borderRadius: '9999px',
-                        background: 'rgba(0, 0, 0, 0.55)',
-                        backdropFilter: 'blur(8px)',
-                        color: '#ffffff',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.04em',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                      }}
-                    >
-                      {reel.tag}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '0.65rem',
-                        fontFamily: 'var(--font-mono)',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                      }}
-                    >
-                      {reel.stats}
-                    </span>
-                  </div>
+                  {/* Thumbnail Image */}
+                  <img
+                    src={reel.thumbnailUrl}
+                    alt={reel.title}
+                    loading={index <= 1 ? 'eager' : 'lazy'}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center',
+                      zIndex: 0,
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.opacity = '0';
+                    }}
+                  />
 
-                  {/* Center Play Button */}
-                  <div style={{ alignSelf: 'center' }}>
-                    <div
-                      style={{
-                        width: isCenter ? '56px' : '44px',
-                        height: isCenter ? '56px' : '44px',
-                        borderRadius: '50%',
-                        background: isCenter ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.2)',
-                        backdropFilter: 'blur(12px)',
-                        border: isCenter ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: isCenter ? '0 0 25px rgba(255, 255, 255, 0.3)' : 'none',
-                        transition: 'all 200ms ease',
-                      }}
-                    >
-                      <Play
-                        size={isCenter ? 22 : 16}
-                        weight="fill"
-                        color={isCenter ? '#000000' : '#ffffff'}
-                        style={{ marginLeft: '2px' }}
-                      />
+                  {/* Darken overlay for text contrast */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: 1,
+                      background:
+                        'linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.7) 80%, rgba(0,0,0,0.92) 100%)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+
+                  {/* Card Content Layer */}
+                  <div
+                    style={{
+                      position: 'relative',
+                      zIndex: 5,
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      padding: '1.25rem',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    {/* Top Tag & Stats */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          fontFamily: 'var(--font-mono)',
+                          padding: '0.2rem 0.55rem',
+                          borderRadius: '9999px',
+                          background: 'rgba(0, 0, 0, 0.75)',
+                          color: '#ffffff',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                        }}
+                      >
+                        {reel.tag}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          fontFamily: 'var(--font-mono)',
+                          color: 'rgba(255, 255, 255, 0.75)',
+                        }}
+                      >
+                        {reel.stats}
+                      </span>
+                    </div>
+
+                    {/* Center Play Button */}
+                    <div style={{ alignSelf: 'center' }}>
+                      <div
+                        style={{
+                          width: isCenter ? '54px' : '44px',
+                          height: isCenter ? '54px' : '44px',
+                          borderRadius: '50%',
+                          background: isCenter ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.25)',
+                          border: isCenter ? 'none' : '1px solid rgba(255, 255, 255, 0.35)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: isCenter ? '0 0 25px rgba(255, 255, 255, 0.3)' : 'none',
+                          transition: 'all 200ms ease',
+                        }}
+                      >
+                        <Play
+                          size={isCenter ? 22 : 16}
+                          weight="fill"
+                          color={isCenter ? '#000000' : '#ffffff'}
+                          style={{ marginLeft: '2px' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Bottom Title */}
+                    <div>
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: '0.7rem',
+                          color: 'rgba(255, 255, 255, 0.65)',
+                          fontFamily: 'var(--font-body)',
+                          marginBottom: '0.15rem',
+                        }}
+                      >
+                        {reel.category}
+                      </span>
+                      <h3
+                        style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: '0.95rem',
+                          fontWeight: 600,
+                          color: '#ffffff',
+                          lineHeight: 1.2,
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        {reel.title}
+                      </h3>
                     </div>
                   </div>
-
-                  {/* Bottom Title */}
-                  <div>
-                    <span
-                      style={{
-                        display: 'block',
-                        fontSize: '0.7rem',
-                        color: 'rgba(255, 255, 255, 0.6)',
-                        fontFamily: 'var(--font-body)',
-                        marginBottom: '0.15rem',
-                      }}
-                    >
-                      {reel.category}
-                    </span>
-                    <h3
-                      style={{
-                        fontFamily: 'var(--font-display)',
-                        fontSize: '0.95rem',
-                        fontWeight: 600,
-                        color: '#ffffff',
-                        lineHeight: 1.2,
-                        letterSpacing: '-0.01em',
-                      }}
-                    >
-                      {reel.title}
-                    </h3>
-                  </div>
                 </div>
-              </motion.div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* Desktop 3D Fan Carousel Stage */
+          <div
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: `${stageH}px`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              perspective: perspectiveVal,
+              userSelect: 'none',
+              touchAction: 'pan-y',
+            }}
+          >
+            {REELS.map((reel, index) => {
+              const offset = index - activeIndex;
+              const absOffset = Math.abs(offset);
+              const isCenter = offset === 0;
+
+              const rotateZ = offset * rotStep;
+              const translateX = offset * xSpread;
+              const translateY = Math.pow(absOffset, 1.8) * yPow;
+              const translateZ = -absOffset * zSpread;
+              const scale = 1 - absOffset * scaleStep;
+              const zIndex = 50 - absOffset * 5;
+              const cardOpacity = isCenter ? 1 : Math.max(0.35, 1 - absOffset * 0.2);
+
+              return (
+                <motion.div
+                  key={reel.id}
+                  initial={{ opacity: 0, y: 80, rotateZ: 0 }}
+                  animate={
+                    isInView
+                      ? {
+                          opacity: cardOpacity,
+                          x: translateX,
+                          y: translateY,
+                          z: translateZ,
+                          rotateZ,
+                          scale,
+                        }
+                      : {}
+                  }
+                  transition={{
+                    type: 'spring',
+                    stiffness: 280,
+                    damping: 26,
+                    mass: 0.8,
+                  }}
+                  whileHover={canHover ? {
+                    scale: scale * 1.04,
+                    y: translateY - 12,
+                    zIndex: 60,
+                    opacity: 1,
+                    transition: { duration: 0.2 },
+                  } : undefined}
+                  onClick={() => {
+                    if (isCenter) {
+                      setActiveModalVideo(reel);
+                    } else {
+                      setActiveIndex(index);
+                    }
+                  }}
+                  style={{
+                    position: 'absolute',
+                    width: `${cardW}px`,
+                    height: `${cardH}px`,
+                    borderRadius: '24px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    zIndex,
+                    transformStyle: 'preserve-3d',
+                    border: isCenter
+                      ? '2px solid rgba(255, 255, 255, 0.45)'
+                      : '1px solid rgba(255, 255, 255, 0.12)',
+                    boxShadow: isCenter
+                      ? '0 25px 50px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 255, 255, 0.12)'
+                      : '0 15px 35px rgba(0, 0, 0, 0.7)',
+                    background: reel.bg,
+                  }}
+                >
+                  {/* Centered Video Thumbnail */}
+                  <img
+                    src={reel.thumbnailUrl}
+                    alt={reel.title}
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
+                    loading="eager"
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      objectPosition: 'center',
+                      zIndex: 0,
+                      filter: isCenter ? 'brightness(0.92)' : 'brightness(0.75)',
+                      transition: 'filter 300ms ease, transform 300ms ease',
+                    }}
+                    onError={(e) => {
+                      e.currentTarget.style.opacity = '0';
+                    }}
+                  />
+
+                  {/* Darken overlay so text is readable */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      zIndex: 1,
+                      background: `
+                        linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.6) 85%, rgba(0,0,0,0.9) 100%)
+                      `,
+                      pointerEvents: 'none',
+                    }}
+                  />
+
+                  {/* Card Content Layer */}
+                  <div
+                    style={{
+                      position: 'relative',
+                      zIndex: 5,
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      padding: '1.25rem',
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    {/* Top Tag & Stats */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          fontFamily: 'var(--font-mono)',
+                          padding: '0.2rem 0.55rem',
+                          borderRadius: '9999px',
+                          background: 'rgba(0, 0, 0, 0.55)',
+                          backdropFilter: 'blur(8px)',
+                          color: '#ffffff',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.04em',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                        }}
+                      >
+                        {reel.tag}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.65rem',
+                          fontFamily: 'var(--font-mono)',
+                          color: 'rgba(255, 255, 255, 0.7)',
+                        }}
+                      >
+                        {reel.stats}
+                      </span>
+                    </div>
+
+                    {/* Center Play Button */}
+                    <div style={{ alignSelf: 'center' }}>
+                      <div
+                        style={{
+                          width: isCenter ? '56px' : '44px',
+                          height: isCenter ? '56px' : '44px',
+                          borderRadius: '50%',
+                          background: isCenter ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(12px)',
+                          border: isCenter ? 'none' : '1px solid rgba(255, 255, 255, 0.3)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: isCenter ? '0 0 25px rgba(255, 255, 255, 0.3)' : 'none',
+                          transition: 'all 200ms ease',
+                        }}
+                      >
+                        <Play
+                          size={isCenter ? 22 : 16}
+                          weight="fill"
+                          color={isCenter ? '#000000' : '#ffffff'}
+                          style={{ marginLeft: '2px' }}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Bottom Title */}
+                    <div>
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: '0.7rem',
+                          color: 'rgba(255, 255, 255, 0.6)',
+                          fontFamily: 'var(--font-body)',
+                          marginBottom: '0.15rem',
+                        }}
+                      >
+                        {reel.category}
+                      </span>
+                      <h3
+                        style={{
+                          fontFamily: 'var(--font-display)',
+                          fontSize: '0.95rem',
+                          fontWeight: 600,
+                          color: '#ffffff',
+                          lineHeight: 1.2,
+                          letterSpacing: '-0.01em',
+                        }}
+                      >
+                        {reel.title}
+                      </h3>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Controls */}
         <div
@@ -516,7 +725,7 @@ export default function CardFanCarousel() {
             {REELS.map((_, idx) => (
               <button
                 key={idx}
-                onClick={() => setActiveIndex(idx)}
+                onClick={() => (isMobile ? scrollToMobileIndex(idx) : setActiveIndex(idx))}
                 style={{
                   width: idx === activeIndex ? '24px' : '7px',
                   height: '7px',
