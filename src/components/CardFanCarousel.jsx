@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { motion, useInView, AnimatePresence } from 'motion/react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { motion, useInView, AnimatePresence, useReducedMotion } from 'motion/react';
 import { CaretLeft, CaretRight, Play, X, ArrowUpRight } from '@phosphor-icons/react';
 import { useMediaQuery } from '../hooks/useMediaQuery';
 
@@ -130,7 +130,8 @@ export default function CardFanCarousel() {
   const [activeIndex, setActiveIndex] = useState(3);
   const [activeModalVideo, setActiveModalVideo] = useState(null);
   const containerRef = useRef(null);
-  const isInView = useInView(containerRef, { once: true, amount: 0.25 });
+  const isInView = useInView(containerRef, { once: false, amount: 0.2 });
+  const shouldReduceMotion = useReducedMotion();
 
   const isMobile = useMediaQuery('(max-width: 768px)');
   const canHover = useMediaQuery('(hover: hover) and (pointer: fine)');
@@ -138,30 +139,103 @@ export default function CardFanCarousel() {
   // Mobile horizontal snap slider ref
   const mobileScrollRef = useRef(null);
 
-  const handleMobileScroll = () => {
-    if (!mobileScrollRef.current) return;
-    const { scrollLeft } = mobileScrollRef.current;
-    const cardStep = 256; // 240px card + 16px gap
-    const newIndex = Math.round(scrollLeft / cardStep);
-    if (newIndex >= 0 && newIndex < REELS.length && newIndex !== activeIndex) {
-      setActiveIndex(newIndex);
-    }
-  };
+  // Auto-advance loop state
+  const [isPaused, setIsPaused] = useState(false);
+  const pauseTimeoutRef = useRef(null);
 
-  const scrollToMobileIndex = (index) => {
-    if (!mobileScrollRef.current) {
+  // Initialize active index to 0 on mobile so first reel is centered & highlighted
+  useEffect(() => {
+    if (isMobile) {
+      setActiveIndex(0);
+    } else {
+      setActiveIndex(3);
+    }
+  }, [isMobile]);
+
+  // Pause auto-advance when user interacts (swipe, touch, click, hover), resume after 4.5s
+  const resetPauseTimer = useCallback(() => {
+    setIsPaused(true);
+    if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+    pauseTimeoutRef.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 4500);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+    };
+  }, []);
+
+  const scrollToMobileIndex = useCallback((index) => {
+    const el = mobileScrollRef.current;
+    if (!el) {
       setActiveIndex(index);
       return;
     }
-    const cardStep = 256;
-    mobileScrollRef.current.scrollTo({
-      left: index * cardStep,
+    const cards = el.children;
+    if (!cards || !cards[index]) {
+      setActiveIndex(index);
+      return;
+    }
+
+    const targetCard = cards[index];
+    // Exact mathematical center of the target card in the viewport
+    const targetLeft = targetCard.offsetLeft - (el.clientWidth - targetCard.clientWidth) / 2;
+
+    el.scrollTo({
+      left: targetLeft,
       behavior: 'smooth',
     });
-    setActiveIndex(index);
-  };
+  }, []);
+
+  const handleMobileScroll = useCallback(() => {
+    const el = mobileScrollRef.current;
+    if (!el) return;
+    const { scrollLeft, clientWidth } = el;
+    const center = scrollLeft + clientWidth / 2;
+    const cards = el.children;
+    if (!cards || cards.length === 0) return;
+
+    let closestIndex = 0;
+    let minDistance = Infinity;
+
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const dist = Math.abs(center - cardCenter);
+      if (dist < minDistance) {
+        minDistance = dist;
+        closestIndex = i;
+      }
+    }
+
+    if (closestIndex !== activeIndex) {
+      setActiveIndex(closestIndex);
+    }
+  }, [activeIndex]);
+
+  // Auto-advance loop timer (2.5 seconds per reel)
+  useEffect(() => {
+    if (shouldReduceMotion || isPaused || activeModalVideo || !isInView) return;
+
+    const timer = setInterval(() => {
+      if (isMobile) {
+        setActiveIndex((current) => {
+          const next = (current + 1) % REELS.length;
+          scrollToMobileIndex(next);
+          return current; // handleMobileScroll smoothly updates activeIndex as the card crosses center
+        });
+      } else {
+        setActiveIndex((prev) => (prev + 1) % REELS.length);
+      }
+    }, 2500);
+
+    return () => clearInterval(timer);
+  }, [isMobile, isPaused, activeModalVideo, isInView, shouldReduceMotion, scrollToMobileIndex]);
 
   const handlePrev = () => {
+    resetPauseTimer();
     if (isMobile) {
       const target = activeIndex > 0 ? activeIndex - 1 : REELS.length - 1;
       scrollToMobileIndex(target);
@@ -171,6 +245,7 @@ export default function CardFanCarousel() {
   };
 
   const handleNext = () => {
+    resetPauseTimer();
     if (isMobile) {
       const target = activeIndex < REELS.length - 1 ? activeIndex + 1 : 0;
       scrollToMobileIndex(target);
@@ -292,6 +367,13 @@ export default function CardFanCarousel() {
           <div
             ref={mobileScrollRef}
             onScroll={handleMobileScroll}
+            onTouchStart={() => {
+              setIsPaused(true);
+              if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+            }}
+            onTouchEnd={() => {
+              resetPauseTimer();
+            }}
             className="no-scrollbar"
             style={{
               display: 'flex',
@@ -309,7 +391,13 @@ export default function CardFanCarousel() {
               return (
                 <div
                   key={reel.id}
-                  onClick={() => setActiveModalVideo(reel)}
+                  onClick={() => {
+                    if (isCenter) {
+                      setActiveModalVideo(reel);
+                    } else {
+                      scrollToMobileIndex(index);
+                    }
+                  }}
                   style={{
                     flex: '0 0 240px',
                     height: '380px',
@@ -325,10 +413,8 @@ export default function CardFanCarousel() {
                     boxShadow: isCenter
                       ? '0 16px 36px rgba(0, 0, 0, 0.9), 0 0 25px rgba(255, 255, 255, 0.08)'
                       : '0 8px 24px rgba(0, 0, 0, 0.6)',
-                    willChange: 'transform',
-                    transform: isCenter ? 'scale(1)' : 'scale(0.96)',
                     opacity: isCenter ? 1 : 0.75,
-                    transition: 'transform 250ms cubic-bezier(0.16, 1, 0.3, 1), opacity 250ms ease, border-color 250ms ease',
+                    transition: 'opacity 250ms ease, border-color 250ms ease, box-shadow 250ms ease',
                   }}
                 >
                   {/* Thumbnail Image */}
@@ -465,6 +551,8 @@ export default function CardFanCarousel() {
           <div
             onTouchStart={onTouchStart}
             onTouchEnd={onTouchEnd}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
             style={{
               position: 'relative',
               width: '100%',
@@ -507,10 +595,8 @@ export default function CardFanCarousel() {
                       : {}
                   }
                   transition={{
-                    type: 'spring',
-                    stiffness: 280,
-                    damping: 26,
-                    mass: 0.8,
+                    duration: 0.65,
+                    ease: [0.16, 1, 0.3, 1],
                   }}
                   whileHover={canHover ? {
                     scale: scale * 1.04,
@@ -725,7 +811,14 @@ export default function CardFanCarousel() {
             {REELS.map((_, idx) => (
               <button
                 key={idx}
-                onClick={() => (isMobile ? scrollToMobileIndex(idx) : setActiveIndex(idx))}
+                onClick={() => {
+                  resetPauseTimer();
+                  if (isMobile) {
+                    scrollToMobileIndex(idx);
+                  } else {
+                    setActiveIndex(idx);
+                  }
+                }}
                 style={{
                   width: idx === activeIndex ? '24px' : '7px',
                   height: '7px',
@@ -734,7 +827,7 @@ export default function CardFanCarousel() {
                   border: 'none',
                   cursor: 'pointer',
                   padding: 0,
-                  transition: 'all 300ms cubic-bezier(0.16, 1, 0.3, 1)',
+                  transition: 'width 300ms cubic-bezier(0.16, 1, 0.3, 1), background-color 300ms cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
                 aria-label={`Go to slide ${idx + 1}`}
               />

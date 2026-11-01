@@ -42,10 +42,10 @@ const CELL = 121.33;
 const GAP = 8;
 const STEP = 3 * (CELL + GAP);
 
-const EXIT_MS = 240; // old text removed / new text mounted
-const SLIDE_MS = 800; // column slide duration + interaction lock
+const EXIT_MS = 350; // old text removed / new text mounted
+const SLIDE_MS = 1000; // column slide duration + interaction lock
 
-const EASE_INOUT = "cubic-bezier(0.65,0,0.35,1)";
+const EASE_BEZIER = "cubic-bezier(0.22, 1, 0.36, 1)";
 
 const QUOTE_CLASSES =
   "m-0 text-xl font-medium leading-[1.4] tracking-[-0.015em] text-white/95 sm:text-[23px] text-balance text-center md:text-left";
@@ -150,7 +150,7 @@ function Chars({
 
 export function ScrollReelTestimonials({
   testimonials,
-  charStaggerMs = 6,
+  charStaggerMs = 15,
   className,
 }: ScrollReelTestimonialsProps) {
   /* Navigation state vs display state are kept separate so the
@@ -177,11 +177,30 @@ export function ScrollReelTestimonials({
     };
   }, []);
 
+  // Auto-advance loop timer (2.5 seconds per testimonial)
+  const [isPaused, setIsPaused] = React.useState(false);
+  const pauseTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const resetPauseTimer = React.useCallback(() => {
+    setIsPaused(true);
+    if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+    pauseTimeoutRef.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 4500);
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+    };
+  }, []);
+
   const paginate = React.useCallback(
     (dir: 1 | -1) => {
       if (animating.current) return;
-      const next = index + dir;
-      if (next < 0 || next >= count) return;
+      let next = index + dir;
+      if (next >= count) next = 0;
+      if (next < 0) next = count - 1;
       animating.current = true;
 
       setIndex(next);
@@ -202,13 +221,23 @@ export function ScrollReelTestimonials({
     [index, count]
   );
 
+  React.useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      paginate(1);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [isPaused, paginate]);
+
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowRight") {
       e.preventDefault();
+      resetPauseTimer();
       paginate(1);
     }
     if (e.key === "ArrowLeft") {
       e.preventDefault();
+      resetPauseTimer();
       paginate(-1);
     }
   };
@@ -222,6 +251,7 @@ export function ScrollReelTestimonials({
     const touchEndX = e.changedTouches[0].clientX;
     const diff = touchStartX.current - touchEndX;
     if (Math.abs(diff) > 40) {
+      resetPauseTimer();
       if (diff > 0) {
         paginate(1);
       } else {
@@ -253,7 +283,7 @@ export function ScrollReelTestimonials({
 
   const colStyle = (y: number): React.CSSProperties => ({
     transform: `translateY(${y}px)`,
-    transition: mounted ? `transform ${SLIDE_MS}ms ${EASE_INOUT}` : "none",
+    transition: mounted ? `transform ${SLIDE_MS}ms ${EASE_BEZIER}` : "none",
   });
 
   const current = testimonials[displayIndex];
@@ -265,8 +295,17 @@ export function ScrollReelTestimonials({
       aria-label="Testimonials"
       tabIndex={0}
       onKeyDown={onKeyDown}
-      onTouchStart={onTouchStart}
-      onTouchEnd={onTouchEnd}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      onTouchStart={(e) => {
+        setIsPaused(true);
+        if (pauseTimeoutRef.current) clearTimeout(pauseTimeoutRef.current);
+        onTouchStart(e);
+      }}
+      onTouchEnd={(e) => {
+        resetPauseTimer();
+        onTouchEnd(e);
+      }}
       className={cn(
         "relative flex w-full max-w-[960px] flex-col items-stretch gap-2.5 overflow-hidden rounded-2xl border border-white/10 bg-[#0a0a0a] shadow-[0_20px_50px_rgba(0,0,0,0.6),inset_0_1px_0_rgba(255,255,255,0.06)] outline-none focus-visible:ring-2 focus-visible:ring-white/40 md:min-h-[350px] md:flex-row",
         className
@@ -327,11 +366,11 @@ export function ScrollReelTestimonials({
       </div>
 
       {/* Content section */}
-      <div className="flex min-w-0 flex-1 flex-col justify-between self-stretch p-6 md:p-8 md:pl-6">
+      <div className="flex min-w-0 flex-1 flex-col justify-between self-stretch px-6 py-6 sm:px-8 md:p-8 md:pl-6">
         {/* Center stage: quote mark + text + author/role vertically centered in the card */}
-        <div className="flex flex-1 flex-col justify-center gap-3.5 my-auto items-center text-center md:items-start md:text-left">
+        <div className="flex flex-1 flex-col justify-center items-center md:items-start gap-3.5 my-auto text-center md:text-left">
           <svg
-            className="block h-9 w-9 text-white/20 shrink-0 mx-auto md:mx-0"
+            className="block h-8 w-8 text-white/20 shrink-0 mx-auto md:mx-0"
             viewBox="0 0 24 24"
             fill="currentColor"
             aria-hidden="true"
@@ -341,30 +380,38 @@ export function ScrollReelTestimonials({
 
           {/* Text stage */}
           <div
-            className="relative w-full max-w-[460px] overflow-hidden text-center md:text-left mx-auto md:mx-0"
+            className="relative w-full max-w-[460px] overflow-hidden mx-auto md:mx-0"
             aria-live="polite"
           >
-            {/* Invisible in-flow copy sizes the stage to the current
-              * quote at any viewport width, so wrapped text never clips. */}
+            {/* Invisible in-flow sizer: sizes the stage to the maximum height across ALL testimonials
+              * so the card container stays completely stable and identical in size. */}
             <div
               aria-hidden="true"
-              className="invisible flex flex-col gap-3 items-center md:items-start text-center md:text-left"
+              className="invisible grid grid-cols-1 grid-rows-1"
             >
-              <p className={QUOTE_CLASSES}>{current.quote}</p>
-              <div className="flex flex-col gap-0.5 items-center md:items-start text-center md:text-left">
-                <p className={AUTHOR_CLASSES}>{current.author}</p>
-                {current.role && (
-                  <p className="m-0 text-xs md:text-sm text-zinc-400 font-normal">
-                    {current.role}
-                  </p>
-                )}
-              </div>
+              {testimonials.map((t, i) => (
+                <div
+                  key={i}
+                  className="col-start-1 row-start-1 flex flex-col items-center md:items-start gap-3 text-center md:text-left"
+                >
+                  <p className={QUOTE_CLASSES}>{t.quote}</p>
+                  <div className="flex flex-col items-center md:items-start gap-0.5 text-center md:text-left">
+                    <p className={AUTHOR_CLASSES}>{t.author}</p>
+                    {t.role && (
+                      <p className="m-0 text-xs md:text-sm text-zinc-400 font-normal text-center md:text-left">
+                        {t.role}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
             </div>
 
+            {/* Active testimonial centered inside the fixed-height stage */}
             <div
               key={displayIndex}
               className={cn(
-                "absolute inset-x-0 top-0 flex flex-col gap-3 will-change-[transform,opacity] items-center md:items-start text-center md:text-left",
+                "absolute inset-0 flex flex-col justify-center items-center md:items-start gap-3 text-center md:text-left will-change-[transform,opacity]",
                 exiting && "scroll-reel-exit"
               )}
             >
@@ -375,7 +422,7 @@ export function ScrollReelTestimonials({
                   staggerMs={charStaggerMs}
                 />
               </p>
-              <div className="flex flex-col gap-0.5 items-center md:items-start text-center md:text-left">
+              <div className="flex flex-col items-center md:items-start gap-0.5 text-center md:text-left">
                 <p className={AUTHOR_CLASSES}>
                   <Chars
                     text={current.author}
@@ -384,7 +431,7 @@ export function ScrollReelTestimonials({
                   />
                 </p>
                 {current.role && (
-                  <p className="m-0 text-xs md:text-sm text-zinc-400 font-normal">
+                  <p className="m-0 text-xs md:text-sm text-zinc-400 font-normal text-center md:text-left">
                     <Chars
                       text={current.role}
                       startIndex={current.quote.length + current.author.length + 10}
@@ -406,10 +453,12 @@ export function ScrollReelTestimonials({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => paginate(-1)}
-              disabled={index === 0}
+              onClick={() => {
+                resetPauseTimer();
+                paginate(-1);
+              }}
               aria-label="Previous testimonial"
-              className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border border-white/20 bg-white/[0.04] p-0 text-white transition-[opacity,transform,background-color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:enabled:bg-white/10 hover:enabled:scale-[1.08] active:enabled:scale-[0.92] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+              className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border border-white/20 bg-white/[0.04] p-0 text-white transition-[opacity,transform,background-color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-white/10 hover:scale-[1.08] active:scale-[0.92] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             >
               <svg
                 className="h-3.5 w-3.5 opacity-80"
@@ -427,10 +476,12 @@ export function ScrollReelTestimonials({
 
             <button
               type="button"
-              onClick={() => paginate(1)}
-              disabled={index === count - 1}
+              onClick={() => {
+                resetPauseTimer();
+                paginate(1);
+              }}
               aria-label="Next testimonial"
-              className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border border-white/20 bg-white/[0.04] p-0 text-white transition-[opacity,transform,background-color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:enabled:bg-white/10 hover:enabled:scale-[1.08] active:enabled:scale-[0.92] disabled:cursor-not-allowed disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
+              className="grid h-8 w-8 cursor-pointer place-items-center rounded-full border border-white/20 bg-white/[0.04] p-0 text-white transition-[opacity,transform,background-color] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-white/10 hover:scale-[1.08] active:scale-[0.92] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             >
               <svg
                 className="h-3.5 w-3.5 opacity-80"
