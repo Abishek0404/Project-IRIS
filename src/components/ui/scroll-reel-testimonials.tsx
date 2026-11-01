@@ -48,9 +48,9 @@ const SLIDE_MS = 800; // column slide duration + interaction lock
 const EASE_INOUT = "cubic-bezier(0.65,0,0.35,1)";
 
 const QUOTE_CLASSES =
-  "m-0 text-xl font-medium leading-[1.4] tracking-[-0.015em] text-white/95 sm:text-[23px] text-balance";
+  "m-0 text-xl font-medium leading-[1.4] tracking-[-0.015em] text-white/95 sm:text-[23px] text-balance text-center md:text-left";
 const AUTHOR_CLASSES =
-  "m-0 text-base font-semibold tracking-tight text-white sm:text-lg";
+  "m-0 text-base font-semibold tracking-tight text-white sm:text-lg text-center md:text-left";
 
 const FEATURED_SHADOW =
   "0 1.008px 0.705px -0.563px rgba(0,0,0,0.5), 0 2.389px 1.672px -1.125px rgba(0,0,0,0.45), 0 4.357px 3.05px -1.688px rgba(0,0,0,0.4), 0 7.244px 5.07px -2.25px rgba(0,0,0,0.35), 0 11.698px 8.188px -2.813px rgba(0,0,0,0.3), 0 19.148px 13.404px -3.375px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.7)";
@@ -329,9 +329,9 @@ export function ScrollReelTestimonials({
       {/* Content section */}
       <div className="flex min-w-0 flex-1 flex-col justify-between self-stretch p-6 md:p-8 md:pl-6">
         {/* Center stage: quote mark + text + author/role vertically centered in the card */}
-        <div className="flex flex-1 flex-col justify-center gap-3.5 my-auto">
+        <div className="flex flex-1 flex-col justify-center gap-3.5 my-auto items-center text-center md:items-start md:text-left">
           <svg
-            className="block h-9 w-9 text-white/20 shrink-0"
+            className="block h-9 w-9 text-white/20 shrink-0 mx-auto md:mx-0"
             viewBox="0 0 24 24"
             fill="currentColor"
             aria-hidden="true"
@@ -341,17 +341,17 @@ export function ScrollReelTestimonials({
 
           {/* Text stage */}
           <div
-            className="relative w-full max-w-[460px] overflow-hidden"
+            className="relative w-full max-w-[460px] overflow-hidden text-center md:text-left mx-auto md:mx-0"
             aria-live="polite"
           >
             {/* Invisible in-flow copy sizes the stage to the current
               * quote at any viewport width, so wrapped text never clips. */}
             <div
               aria-hidden="true"
-              className="invisible flex flex-col gap-3"
+              className="invisible flex flex-col gap-3 items-center md:items-start text-center md:text-left"
             >
               <p className={QUOTE_CLASSES}>{current.quote}</p>
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-0.5 items-center md:items-start text-center md:text-left">
                 <p className={AUTHOR_CLASSES}>{current.author}</p>
                 {current.role && (
                   <p className="m-0 text-xs md:text-sm text-zinc-400 font-normal">
@@ -364,7 +364,7 @@ export function ScrollReelTestimonials({
             <div
               key={displayIndex}
               className={cn(
-                "absolute inset-x-0 top-0 flex flex-col gap-3 will-change-[transform,opacity]",
+                "absolute inset-x-0 top-0 flex flex-col gap-3 will-change-[transform,opacity] items-center md:items-start text-center md:text-left",
                 exiting && "scroll-reel-exit"
               )}
             >
@@ -375,7 +375,7 @@ export function ScrollReelTestimonials({
                   staggerMs={charStaggerMs}
                 />
               </p>
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-0.5 items-center md:items-start text-center md:text-left">
                 <p className={AUTHOR_CLASSES}>
                   <Chars
                     text={current.author}
