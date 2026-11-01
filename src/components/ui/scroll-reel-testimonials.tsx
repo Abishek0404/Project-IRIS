@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useInView } from "motion/react";
 import { cn } from "@/lib/utils";
 
 /* ----------------------------------------------------------------
@@ -162,6 +163,8 @@ export function ScrollReelTestimonials({
   const animating = React.useRef(false);
   const timeouts = React.useRef<ReturnType<typeof setTimeout>[]>([]);
   const touchStartX = React.useRef<number | null>(null);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const isInView = useInView(containerRef, { once: false, amount: 0.4 });
 
   const count = testimonials.length;
 
@@ -177,7 +180,7 @@ export function ScrollReelTestimonials({
     };
   }, []);
 
-  // Auto-advance loop timer (2.5 seconds per testimonial)
+  // Auto-advance loop timer (4.0 seconds per testimonial) — ONLY when user reaches section
   const [isPaused, setIsPaused] = React.useState(false);
   const pauseTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -222,12 +225,12 @@ export function ScrollReelTestimonials({
   );
 
   React.useEffect(() => {
-    if (isPaused) return;
+    if (isPaused || !isInView) return;
     const timer = setInterval(() => {
       paginate(1);
     }, 4000);
     return () => clearInterval(timer);
-  }, [isPaused, paginate]);
+  }, [isPaused, isInView, paginate]);
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowRight") {
@@ -290,6 +293,7 @@ export function ScrollReelTestimonials({
 
   return (
     <div
+      ref={containerRef}
       role="region"
       aria-roledescription="carousel"
       aria-label="Testimonials"

@@ -19,7 +19,7 @@ function DiscordLogo({ size = 20, ...props }) {
 }
 
 const SOCIALS = [
-  { label: 'YouTube', icon: YoutubeLogo, href: '#' },
+  { label: 'YouTube', icon: YoutubeLogo, href: 'https://www.youtube.com/channel/UCKGYgtGjAArdctSpVFvR3zA' },
   { label: 'Instagram', icon: InstagramLogo, href: '#' },
   { label: 'Discord', icon: DiscordLogo, href: 'https://discord.com/users/1295238237639413793' },
 ];

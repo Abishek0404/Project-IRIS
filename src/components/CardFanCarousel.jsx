@@ -131,6 +131,8 @@ export default function CardFanCarousel() {
   const [activeModalVideo, setActiveModalVideo] = useState(null);
   const containerRef = useRef(null);
   const isInView = useInView(containerRef, { once: false, amount: 0.2 });
+  const stageRef = useRef(null);
+  const isStageInView = useInView(stageRef, { once: false, amount: 0.4 });
   const shouldReduceMotion = useReducedMotion();
 
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -215,9 +217,9 @@ export default function CardFanCarousel() {
     }
   }, [activeIndex]);
 
-  // Auto-advance loop timer (2.5 seconds per reel)
+  // Auto-advance loop timer (2.5 seconds per reel) — ONLY when stage is in view
   useEffect(() => {
-    if (shouldReduceMotion || isPaused || activeModalVideo || !isInView) return;
+    if (shouldReduceMotion || isPaused || activeModalVideo || !isStageInView) return;
 
     const timer = setInterval(() => {
       if (isMobile) {
@@ -232,7 +234,7 @@ export default function CardFanCarousel() {
     }, 2500);
 
     return () => clearInterval(timer);
-  }, [isMobile, isPaused, activeModalVideo, isInView, shouldReduceMotion, scrollToMobileIndex]);
+  }, [isMobile, isPaused, activeModalVideo, isStageInView, shouldReduceMotion, scrollToMobileIndex]);
 
   const handlePrev = () => {
     resetPauseTimer();
@@ -362,7 +364,8 @@ export default function CardFanCarousel() {
         </div>
 
         {/* Reels Stage — Mobile Native Snap Slider VS Desktop 3D Fan */}
-        {isMobile ? (
+        <div ref={stageRef}>
+          {isMobile ? (
           /* Mobile Native Horizontal Snap Slider */
           <div
             ref={mobileScrollRef}
@@ -767,6 +770,7 @@ export default function CardFanCarousel() {
             })}
           </div>
         )}
+        </div>
 
         {/* Controls */}
         <div
