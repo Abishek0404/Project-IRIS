@@ -383,7 +383,7 @@ export default function CardFanCarousel() {
               WebkitOverflowScrolling: 'touch',
               padding: '1rem calc(50vw - 120px) 1.5rem calc(50vw - 120px)',
               userSelect: 'none',
-              touchAction: 'pan-x',
+              touchAction: 'pan-y pan-x',
             }}
           >
             {REELS.map((reel, index) => {
